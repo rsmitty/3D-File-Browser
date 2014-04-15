@@ -4,8 +4,8 @@
  */
 package mygame;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -13,10 +13,21 @@ import java.util.Arrays;
  */
 public class FileBrowser {
     
-    public ArrayList<String> GetFileNames(String directoryPath){
-        File f = new File(directoryPath);
-        ArrayList<String> names = new ArrayList<String>(Arrays.asList(f.list()));
-        return names;
+    public Map<String,String> GetFileNames(String directoryPath){
+       
+        Map<String,String> returnList = new HashMap();
+    
+        File directory = new File(directoryPath);
+        File[] fList = directory.listFiles();
+        for (File file : fList) {
+          returnList.put(file.getName(),file.getAbsolutePath());
+        }
+        return returnList;
+    
     }
     
+    public String GetParent(String directoryPath){
+        File f = new File(directoryPath);
+        return f.getParent();
+    }
 }
