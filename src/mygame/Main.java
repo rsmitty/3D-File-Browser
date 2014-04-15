@@ -40,6 +40,7 @@ public class Main extends SimpleApplication {
       }
     
     public void SetupUI(String directory){
+      cam.setLocation(new Vector3f(0,0,10));
       flyCam.setMoveSpeed(2);
       MakeCrosshairs();
       shootables = new Node("Shootables");
