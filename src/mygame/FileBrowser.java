@@ -30,4 +30,9 @@ public class FileBrowser {
         File f = new File(directoryPath);
         return f.getParent();
     }
+    
+    public Boolean CheckValidPath(String directoryPath){
+        File f = new File(directoryPath);
+        return f.isDirectory();
+    }
 }

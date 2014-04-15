@@ -16,10 +16,6 @@ import com.jme3.scene.Node;
 import com.jme3.scene.shape.Box;
 import java.util.Map;
 
-/**
- * test
- * @author normenhansen
- */
 public class Main extends SimpleApplication {
 
     private Node shootables;
@@ -34,26 +30,47 @@ public class Main extends SimpleApplication {
  
     @Override
     public void simpleInitApp() {
+        
+      //Setup listeners for mouse buttons  
       initKeys();
-      currentPath = "/";
-      SetupUI("/");
+      
+      //Determine OS for root dir
+      if ( System.getProperty("os.name").contains("Windows")){
+          currentPath = "C:\\";
+      }
+      else{
+          currentPath = "/";
+      }
+      
+      //Create UI - Crosshairs, Boxes, and Labels
+      SetupUI(currentPath);
+      
+      
       }
     
-    public void SetupUI(String directory){
+    private void SetupUI(String directory){
+      
+      //Reset cam as UI is reset.
       cam.setLocation(new Vector3f(0,0,10));
-      flyCam.setMoveSpeed(2);
+      
+      //Speed up camera
+      flyCam.setMoveSpeed(3);
+      
       MakeCrosshairs();
+      
+      //Holds all the boxes so they're clickable
       shootables = new Node("Shootables");
       rootNode.attachChild(shootables);
       
+      //Get all files in current directory
       fileHash = fb.GetFileNames(directory);
       
+      //Lay boxes out in rows of 5
       int xaxis = 0;
       int zaxis = 0;
       
       for (Map.Entry<String, String> file :fileHash.entrySet()) {
         String filename = file.getKey();
-        //String abspath = file.getValue();
         
         if (xaxis > 20){
           xaxis = 0;
@@ -67,7 +84,7 @@ public class Main extends SimpleApplication {
       }
     }
     
-    public void MakeABox(String filename, int x, int y, int z){
+    private void MakeABox(String filename, int x, int y, int z){
         Box box = new Box(1,1,1);
         Geometry boxGeo = new Geometry("Box", box);
         boxGeo.setLocalTranslation(new Vector3f(x,y,z));
@@ -78,9 +95,9 @@ public class Main extends SimpleApplication {
         shootables.attachChild(boxGeo);
     }
     
-    public void MakeALabel(String filename, int x, int y, int z){
+    private void MakeALabel(String filename, int x, int y, int z){
         float moveX = (float) x - 0.5f;
-        float moveZ = (float) z + 1.01f;
+        float moveZ = (float) z + 1.02f;
         guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
         BitmapText helloText = new BitmapText(guiFont, false);
         helloText.setSize(0.3f);
@@ -89,7 +106,7 @@ public class Main extends SimpleApplication {
         rootNode.attachChild(helloText);
     }
     
-    public void MakeCrosshairs(){
+    private void MakeCrosshairs(){
       guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
       BitmapText cross = new BitmapText(guiFont, false);
       cross.setSize(guiFont.getCharSet().getRenderedSize() * 2);
@@ -116,18 +133,28 @@ public class Main extends SimpleApplication {
 
           if (results.size() > 0) {
             CollisionResult closest = results.getClosestCollision();
-            rootNode.detachAllChildren();
-            currentPath = fileHash.get(closest.getGeometry().getName());
-            SetupUI(currentPath);
+            String closestPath = fileHash.get(closest.getGeometry().getName());
+            
+            if(fb.CheckValidPath(closestPath)){
+              rootNode.detachAllChildren();
+              currentPath = closestPath;
+              SetupUI(currentPath);
+            }
           }
         }
         
         else if (name.equals("Back") && !keyPressed){
+            String parentPath = fb.GetParent(currentPath);
+            
+            if(parentPath != null){
             currentPath = fb.GetParent(currentPath);
             rootNode.detachAllChildren();
             SetupUI(currentPath);
+            }
         }
       }
     };
+    
+    
     
 }
