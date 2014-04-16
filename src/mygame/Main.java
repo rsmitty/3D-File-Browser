@@ -23,7 +23,7 @@ public class Main extends SimpleApplication {
     private String currentPath;
     private FileBrowser fb = new FileBrowser();
     
-     public static void main(String[] args){
+    public static void main(String[] args){
         Main app = new Main();
         app.start();
     }
@@ -65,11 +65,16 @@ public class Main extends SimpleApplication {
       //Get all files in current directory
       fileHash = fb.GetFileNames(directory);
       
+      //Go back a directory if access denied
+      if (fileHash == null) {
+          goBack();
+      }
+      
       //Lay boxes out in rows of 5
       int xaxis = 0;
       int zaxis = 0;
       
-      for (Map.Entry<String, String> file :fileHash.entrySet()) {
+      for (Map.Entry<String, String> file : fileHash.entrySet()) {
         String filename = file.getKey();
         
         if (xaxis > 20){
@@ -101,6 +106,10 @@ public class Main extends SimpleApplication {
         guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
         BitmapText helloText = new BitmapText(guiFont, false);
         helloText.setSize(0.3f);
+        // to keep label short
+        if (filename.length() > 15) {
+            filename = filename.substring(0, 14) + "...";
+        }
         helloText.setText(filename);
         helloText.setLocalTranslation(moveX, 2, moveZ);
         rootNode.attachChild(helloText);
@@ -144,17 +153,18 @@ public class Main extends SimpleApplication {
         }
         
         else if (name.equals("Back") && !keyPressed){
-            String parentPath = fb.GetParent(currentPath);
-            
-            if(parentPath != null){
-            currentPath = fb.GetParent(currentPath);
-            rootNode.detachAllChildren();
-            SetupUI(currentPath);
-            }
+            goBack();
         }
       }
     };
     
-    
+    public void goBack() {
+        String parentPath = fb.GetParent(currentPath);   
+        if(parentPath != null){
+            currentPath = fb.GetParent(currentPath);
+            rootNode.detachAllChildren();
+            SetupUI(currentPath);
+        }
+    }
     
 }

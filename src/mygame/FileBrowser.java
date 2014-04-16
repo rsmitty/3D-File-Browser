@@ -13,17 +13,20 @@ import java.util.Map;
  */
 public class FileBrowser {
     
-    public Map<String,String> GetFileNames(String directoryPath){
+    public Map<String,String> GetFileNames(String directoryPath) {
        
         Map<String,String> returnList = new HashMap();
     
         File directory = new File(directoryPath);
-        File[] fList = directory.listFiles();
-        for (File file : fList) {
-          returnList.put(file.getName(),file.getAbsolutePath());
+        try {
+            File[] fList = directory.listFiles();
+            for (File file : fList) {
+                returnList.put(file.getName(),file.getAbsolutePath());
+            }
+            return returnList;
+        } catch (NullPointerException e) {
+            return null;
         }
-        return returnList;
-    
     }
     
     public String GetParent(String directoryPath){
