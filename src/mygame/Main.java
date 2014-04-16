@@ -125,7 +125,6 @@ public class Main extends SimpleApplication {
     }
     
     public void BlowShitUp(String boxName, Vector3f collisionLocation){
-        /** Explosion effect. Uses Texture from jme3-test-data library! */ 
         ParticleEmitter debris = CreateDebris(collisionLocation);
         ParticleEmitter fire = CreateFire(collisionLocation);
         
@@ -137,8 +136,6 @@ public class Main extends SimpleApplication {
         
         shootables.detachChildNamed(boxName);
         rootNode.detachChildNamed("label-"+boxName);
-        //rootNode.detachChildNamed("Debris");
-        //rootNode.detachChildNamed("Fire");
     }
     
     public ParticleEmitter CreateDebris(Vector3f location){
@@ -159,7 +156,6 @@ public class Main extends SimpleApplication {
     }
     
     public ParticleEmitter CreateFire(Vector3f location){
-        /** Uses Texture from jme3-test-data library! */
         ParticleEmitter fireEffect = new ParticleEmitter("Fire", ParticleMesh.Type.Triangle, 30);
         Material fireMat = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
         fireMat.setTexture("Texture", assetManager.loadTexture("Effects/Explosion/flame.png"));
@@ -177,10 +173,8 @@ public class Main extends SimpleApplication {
         fireEffect.setLocalTranslation(location);
         fireEffect.setParticlesPerSec(0);
         return fireEffect;
-
     }
     
-    /** Declaring the "Shoot" action and mapping to its triggers. */
     public void initKeys() {
       inputManager.addMapping("Shoot", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
       inputManager.addMapping("Back", new MouseButtonTrigger(MouseInput.BUTTON_RIGHT));
