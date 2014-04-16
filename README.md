@@ -2,3 +2,5 @@
 ===============
 
 A "Jurassic Park"- style File Browser in Java. IT'S A UNIX SYSTEM!
+
+![Alt text](/lol.png "Optional title")
