@@ -13,17 +13,16 @@ import java.util.Map;
  */
 public class FileBrowser {
     
-    public Map<String,String> GetFileNames(String directoryPath){
+    public Map<String,String> GetFileNames(String directoryPath) {
        
         Map<String,String> returnList = new HashMap();
     
         File directory = new File(directoryPath);
         File[] fList = directory.listFiles();
-        for (File file : fList) {
-          returnList.put(file.getName(),file.getAbsolutePath());
-        }
+            for (File file : fList) {
+                returnList.put(file.getName(),file.getAbsolutePath());
+            }
         return returnList;
-    
     }
     
     public String GetParent(String directoryPath){
@@ -33,6 +32,10 @@ public class FileBrowser {
     
     public Boolean CheckValidPath(String directoryPath){
         File f = new File(directoryPath);
-        return f.isDirectory();
+        File[] fList = f.listFiles();
+        if ( fList != null && f.isDirectory() ) {
+            return true;
+        }
+        return false;
     }
 }

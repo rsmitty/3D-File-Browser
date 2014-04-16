@@ -27,7 +27,7 @@ public class Main extends SimpleApplication {
     private String currentPath;
     private FileBrowser fb = new FileBrowser();
     
-     public static void main(String[] args){
+    public static void main(String[] args){
         Main app = new Main();
         app.start();
     }
@@ -73,7 +73,7 @@ public class Main extends SimpleApplication {
       int xaxis = 0;
       int zaxis = 0;
       
-      for (Map.Entry<String, String> file :fileHash.entrySet()) {
+      for (Map.Entry<String, String> file : fileHash.entrySet()) {
         String filename = file.getKey();
         
         if (xaxis > 20){
@@ -100,12 +100,16 @@ public class Main extends SimpleApplication {
     }
     
     public void MakeALabel(String filename, int x, int y, int z){
-        float moveX = (float) x - 0.5f;
+        float moveX = (float) x - .8f;
         float moveZ = (float) z + 1.02f;
         guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
         BitmapText helloText = new BitmapText(guiFont, false);
         helloText.setSize(0.3f);
         helloText.setName("label-"+filename);
+        // to keep label short
+        if (filename.length() > 15) {
+            filename = filename.substring(0, 14) + "...";
+        }
         helloText.setText(filename);
         helloText.setLocalTranslation(moveX, 2, moveZ);
         rootNode.attachChild(helloText);
@@ -203,16 +207,18 @@ public class Main extends SimpleApplication {
               currentPath = closestPath;
               SetupUI(currentPath);
             }
+            else {
+                System.out.println("Access Denied");
+            }
           }
         }
         
         else if (name.equals("Back") && !keyPressed){
-            String parentPath = fb.GetParent(currentPath);
-            
+            String parentPath = fb.GetParent(currentPath);   
             if(parentPath != null){
-            currentPath = fb.GetParent(currentPath);
-            rootNode.detachAllChildren();
-            SetupUI(currentPath);
+                currentPath = fb.GetParent(currentPath);
+                rootNode.detachAllChildren();
+                SetupUI(currentPath);
             }
         }
         
@@ -235,8 +241,5 @@ public class Main extends SimpleApplication {
         
       }
     };
-    
-    
-    
     
 }
