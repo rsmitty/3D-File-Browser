@@ -18,6 +18,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Box;
+import java.nio.file.Path;
 import java.util.Map;
 
 public class Main extends SimpleApplication {
@@ -53,10 +54,9 @@ public class Main extends SimpleApplication {
       }
     
     public void SetupUI(String directory){
-      
       //Reset cam as UI is reset.
       //cam.setLocation(new Vector3f(0,0,10));
-              
+      
       //Speed up camera
       flyCam.setMoveSpeed(10);
       
@@ -73,7 +73,7 @@ public class Main extends SimpleApplication {
       int xaxis = 0;
       int zaxis = 0;
       
-      for (Map.Entry<String, String> file : fileHash.entrySet()) {
+      for (Map.Entry<String,String> file : fileHash.entrySet()) {
         String filename = file.getKey();
         
         if (xaxis > 20){
@@ -81,15 +81,15 @@ public class Main extends SimpleApplication {
           zaxis -= 5;
         }
           
-        MakeABox(filename, xaxis,1,zaxis);
-        MakeALabel(filename,xaxis,1,zaxis);  
+        MakeABox(filename, xaxis,1,zaxis, 1);
+        MakeALabel(filename,xaxis,1,zaxis);
            
         xaxis += 5;
       }
     }
     
-    public void MakeABox(String filename, int x, int y, int z){
-        Box box = new Box(1,1,1);
+    public void MakeABox(String filename, int x, int y, int z, int size){
+        Box box = new Box(1,size,1);
         Geometry boxGeo = new Geometry("Box", box);
         boxGeo.setLocalTranslation(new Vector3f(x,y,z));
         boxGeo.setName(filename);
@@ -225,7 +225,7 @@ public class Main extends SimpleApplication {
           if (results.size() > 0) {
             CollisionResult closest = results.getClosestCollision();
             String closestName = closest.getGeometry().getName();
-            String closestPath = fileHash.get(closest.getGeometry().getName());
+            String closestPath = null;// = fileHash.get(closest.getGeometry().getName());
             Vector3f collisionLocation = closest.getGeometry().getLocalTranslation();
             BlowShitUp(closestName,collisionLocation);
             currentPath = closestPath;
