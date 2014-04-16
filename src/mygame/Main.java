@@ -65,11 +65,6 @@ public class Main extends SimpleApplication {
       //Get all files in current directory
       fileHash = fb.GetFileNames(directory);
       
-      //Go back a directory if access denied
-      if (fileHash == null) {
-          goBack();
-      }
-      
       //Lay boxes out in rows of 5
       int xaxis = 0;
       int zaxis = 0;
@@ -149,22 +144,21 @@ public class Main extends SimpleApplication {
               currentPath = closestPath;
               SetupUI(currentPath);
             }
+            else {
+                System.out.println("Access Denied");
+            }
           }
         }
         
         else if (name.equals("Back") && !keyPressed){
-            goBack();
+            String parentPath = fb.GetParent(currentPath);   
+            if(parentPath != null){
+                currentPath = fb.GetParent(currentPath);
+                rootNode.detachAllChildren();
+                SetupUI(currentPath);
+            }
         }
       }
     };
-    
-    public void goBack() {
-        String parentPath = fb.GetParent(currentPath);   
-        if(parentPath != null){
-            currentPath = fb.GetParent(currentPath);
-            rootNode.detachAllChildren();
-            SetupUI(currentPath);
-        }
-    }
     
 }

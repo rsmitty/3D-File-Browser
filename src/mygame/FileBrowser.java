@@ -18,15 +18,11 @@ public class FileBrowser {
         Map<String,String> returnList = new HashMap();
     
         File directory = new File(directoryPath);
-        try {
-            File[] fList = directory.listFiles();
+        File[] fList = directory.listFiles();
             for (File file : fList) {
                 returnList.put(file.getName(),file.getAbsolutePath());
             }
-            return returnList;
-        } catch (NullPointerException e) {
-            return null;
-        }
+        return returnList;
     }
     
     public String GetParent(String directoryPath){
@@ -36,6 +32,10 @@ public class FileBrowser {
     
     public Boolean CheckValidPath(String directoryPath){
         File f = new File(directoryPath);
-        return f.isDirectory();
+        File[] fList = f.listFiles();
+        if ( fList != null && f.isDirectory() ) {
+            return true;
+        }
+        return false;
     }
 }
