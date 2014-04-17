@@ -50,7 +50,7 @@ public class FileBrowser {
     
     public long getSize(Path startPath) throws IOException {
         final AtomicLong size = new AtomicLong(0);
-
+        System.out.println("checking " + startPath.toString());
         Files.walkFileTree(startPath, new SimpleFileVisitor<Path>() {
             
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {

@@ -74,15 +74,17 @@ public class Main extends SimpleApplication {
       int xaxis = 0;
       int zaxis = 0;
       
+      long dirSize;
       for (Map.Entry<Path,Path> file : fileHash.entrySet()) {
         String filename = file.getKey().toString();
         
-        /*try {
-            long size = fb.getSize(file.getKey());
-            System.out.println(filename + " - " + size);
+        try {
+            dirSize = fb.getSize(file.getValue());
+            System.out.println(filename + " - " + dirSize);
         } catch (IOException e) {
-            System.out.println("access denied");
-        }*/
+            // size calculation failed
+        }
+        
         if (xaxis > 20){
           xaxis = 0;
           zaxis -= 5;
