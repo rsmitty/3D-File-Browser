@@ -27,6 +27,7 @@ public class Main extends SimpleApplication {
 
     private Node shootables;
     private Map<Path,Path> fileHash;
+    private Map<Path,Float> sizeHash;
     private Path currentPath;
     private FileBrowser fb = new FileBrowser();
     
@@ -67,37 +68,33 @@ public class Main extends SimpleApplication {
       shootables = new Node("Shootables");
       rootNode.attachChild(shootables);
       
-      //Get all files in current directory
+      //Get all files in current directory and their sizes
       fileHash = fb.GetFileNames(directory);
+      sizeHash = fb.getSizeList(fileHash);
+      sizeHash = fb.normalize(sizeHash);
       
       //Lay boxes out in rows of 5
       int xaxis = 0;
       int zaxis = 0;
       
-      long dirSize;
       for (Map.Entry<Path,Path> file : fileHash.entrySet()) {
         String filename = file.getKey().toString();
-        
-        try {
-            dirSize = fb.getSize(file.getValue());
-            System.out.println(filename + " - " + dirSize);
-        } catch (IOException e) {
-            // size calculation failed
-        }
+        float normalizedSize = sizeHash.get(file.getValue());
+        System.out.printf("%s: %.2f%n", filename, normalizedSize);
         
         if (xaxis > 20){
           xaxis = 0;
           zaxis -= 5;
         }
-          
-        MakeABox(filename, xaxis,1,zaxis, 1);
+        
+        MakeABox(filename,xaxis,1,zaxis,normalizedSize);
         MakeALabel(filename,xaxis,1,zaxis);
-           
+        
         xaxis += 5;
       }
     }
     
-    public void MakeABox(String filename, int x, int y, int z, int size){
+    public void MakeABox(String filename, int x, int y, int z, float size){
         Box box = new Box(1,size,1);
         Geometry boxGeo = new Geometry("Box", box);
         boxGeo.setLocalTranslation(new Vector3f(x,y,z));
