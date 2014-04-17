@@ -18,14 +18,16 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Box;
+import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 public class Main extends SimpleApplication {
 
     private Node shootables;
-    private Map<String,String> fileHash;
-    private String currentPath;
+    private Map<Path,Path> fileHash;
+    private Path currentPath;
     private FileBrowser fb = new FileBrowser();
     
     public static void main(String[] args){
@@ -41,19 +43,18 @@ public class Main extends SimpleApplication {
       
       //Determine OS for root dir
       if ( System.getProperty("os.name").contains("Windows")){
-          currentPath = "C:\\";
+          currentPath = Paths.get("C:\\");
       }
       else{
-          currentPath = "/";
+          currentPath = Paths.get("/");
       }
       
       //Create UI - Crosshairs, Boxes, and Labels
       SetupUI(currentPath);
       
-      
       }
     
-    public void SetupUI(String directory){
+    public void SetupUI(Path directory){
       //Reset cam as UI is reset.
       //cam.setLocation(new Vector3f(0,0,10));
       
@@ -73,9 +74,15 @@ public class Main extends SimpleApplication {
       int xaxis = 0;
       int zaxis = 0;
       
-      for (Map.Entry<String,String> file : fileHash.entrySet()) {
-        String filename = file.getKey();
+      for (Map.Entry<Path,Path> file : fileHash.entrySet()) {
+        String filename = file.getKey().toString();
         
+        /*try {
+            long size = fb.getSize(file.getKey());
+            System.out.println(filename + " - " + size);
+        } catch (IOException e) {
+            System.out.println("access denied");
+        }*/
         if (xaxis > 20){
           xaxis = 0;
           zaxis -= 5;
@@ -194,11 +201,12 @@ public class Main extends SimpleApplication {
 
           if (results.size() > 0) {
             CollisionResult closest = results.getClosestCollision();
-            String closestPath = fileHash.get(closest.getGeometry().getName());
+            String hit = closest.getGeometry().getName();
+            Path hitPath = fileHash.get(Paths.get(hit));
             
-            if(fb.CheckValidPath(closestPath)){
+            if(fb.CheckValidPath(hitPath)){
               rootNode.detachAllChildren();
-              currentPath = closestPath;
+              currentPath = hitPath;
               SetupUI(currentPath);
             }
             else {
@@ -208,9 +216,9 @@ public class Main extends SimpleApplication {
         }
         
         else if (name.equals("Back") && !keyPressed){
-            String parentPath = fb.GetParent(currentPath);   
+            Path parentPath = fb.GetParent(currentPath);   
             if(parentPath != null){
-                currentPath = fb.GetParent(currentPath);
+                currentPath = parentPath;
                 rootNode.detachAllChildren();
                 SetupUI(currentPath);
             }
@@ -225,11 +233,11 @@ public class Main extends SimpleApplication {
           if (results.size() > 0) {
             CollisionResult closest = results.getClosestCollision();
             String closestName = closest.getGeometry().getName();
-            String closestPath = null;// = fileHash.get(closest.getGeometry().getName());
+            String hit = closest.getGeometry().getName();
+            Path hitPath = fileHash.get(Paths.get(hit));
             Vector3f collisionLocation = closest.getGeometry().getLocalTranslation();
             BlowShitUp(closestName,collisionLocation);
-            currentPath = closestPath;
-              
+            currentPath = hitPath;
           }
         }
         

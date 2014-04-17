@@ -3,13 +3,12 @@
  * and open the template in the editor.
  */
 package mygame;
-import java.io.File;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.FileVisitResult;
 import java.nio.file.DirectoryStream;
@@ -22,41 +21,28 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class FileBrowser {
     
-    public Map<String,String> GetFileNames(String directoryPath) {
+    public Map<Path,Path> GetFileNames(Path directoryPath) {
         
-        Map<String,String> returnList = new HashMap();
+        Map<Path,Path> returnList = new HashMap();
         
-        long l = 0;
         try {
-            DirectoryStream<Path> dirList = Files.newDirectoryStream(Paths.get(directoryPath));
+            DirectoryStream<Path> dirList = Files.newDirectoryStream(directoryPath);
             for (Path path : dirList) {
-                if (Files.isDirectory(path)) {
-                    l = getSize(path);
-                }
-                else {
-                    l = Files.size(path);
-                }
-                System.out.println(path.toString() + " - " + l);
-                //returnList.put(path.toAbsolutePath(), l);
-                returnList.put(path.getFileName().toString(),path.toAbsolutePath().toString());
+                returnList.put(path.getFileName(),path.toAbsolutePath());
             }
         } catch (IOException e) {
-            System.out.println("access denied");
+            //access denied - should never happen since we begin on root dir
+            e.printStackTrace();
         }
         return returnList;
     }
     
-    public String GetParent(String directoryPath){
-        File f = new File(directoryPath);
-        return f.getParent();
+    public Path GetParent(Path directoryPath){
+        return directoryPath.getParent();
     }
     
-    public Boolean CheckValidPath(String directoryPath){
-        File f = new File(directoryPath);
-        
-        //necessary because this operation returns null on a restricted directory
-        File[] fList = f.listFiles();
-        if ( fList != null && f.isDirectory() ) {
+    public Boolean CheckValidPath(Path directoryPath){
+        if (Files.isDirectory(directoryPath) && Files.isReadable(directoryPath)) {
             return true;
         }
         return false;
