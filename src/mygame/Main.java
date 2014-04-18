@@ -18,18 +18,25 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Box;
-import java.io.IOException;
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class Main extends SimpleApplication {
 
     private Node shootables;
+    private Node labels;
     private Map<Path,Path> fileHash;
     private Map<Path,Float> sizeHash;
     private Path currentPath;
     private FileBrowser fb = new FileBrowser();
+    private ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(4);
+    private Future future = null;
+    private Boolean timeToUpdate = false;
     
     public static void main(String[] args){
         Main app = new Main();
@@ -56,8 +63,6 @@ public class Main extends SimpleApplication {
       }
     
     public void SetupUI(Path directory){
-      //Reset cam as UI is reset.
-      //cam.setLocation(new Vector3f(0,0,10));
       
       //Speed up camera
       flyCam.setMoveSpeed(10);
@@ -66,12 +71,12 @@ public class Main extends SimpleApplication {
       
       //Holds all the boxes so they're clickable
       shootables = new Node("Shootables");
+      labels = new Node("Labels");
       rootNode.attachChild(shootables);
+      rootNode.attachChild(labels);
       
-      //Get all files in current directory and their sizes
+      //Get all files in current directory
       fileHash = fb.GetFileNames(directory);
-      sizeHash = fb.getSizeList(fileHash);
-      sizeHash = fb.normalize(sizeHash);
       
       //Lay boxes out in rows of 5
       int xaxis = 0;
@@ -79,25 +84,26 @@ public class Main extends SimpleApplication {
       
       for (Map.Entry<Path,Path> file : fileHash.entrySet()) {
         String filename = file.getKey().toString();
-        float normalizedSize = sizeHash.get(file.getValue());
-        System.out.printf("%s %s: %.2f%n", "normalized", filename, normalizedSize);
         
         if (xaxis > 20){
           xaxis = 0;
           zaxis -= 5;
         }
         
-        MakeABox(filename,xaxis,0,zaxis,normalizedSize);
-        MakeALabel(filename,xaxis,0,zaxis,normalizedSize);
+        MakeABox(filename,xaxis,1,zaxis);
+        MakeALabel(filename,xaxis,1,zaxis);
         
         xaxis += 5;
       }
+      
+      //Call the background process for getting file sizes
+      future = executor.submit(getSizeHash);
     }
     
-    public void MakeABox(String filename, float x, float y, float z, float size){
-        Box box = new Box(1,size,1);
+    public void MakeABox(String filename, float x, float y, float z){
+        Box box = new Box(1,y,1);
         Geometry boxGeo = new Geometry("Box", box);
-        boxGeo.setLocalTranslation(new Vector3f(x,size,z));
+        boxGeo.setLocalTranslation(new Vector3f(x,y,z));
         boxGeo.setName(filename);
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         mat.setColor("Color", ColorRGBA.randomColor());
@@ -105,7 +111,7 @@ public class Main extends SimpleApplication {
         shootables.attachChild(boxGeo);
     }
     
-    public void MakeALabel(String filename, float x, float y, float z, float size){
+    public void MakeALabel(String filename, float x, float y, float z){
         float moveX = (float) x - .8f;
         float moveZ = (float) z + 1.02f;
         guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
@@ -117,7 +123,7 @@ public class Main extends SimpleApplication {
             filename = filename.substring(0, 14) + "...";
         }
         helloText.setText(filename);
-        helloText.setLocalTranslation(moveX, size, moveZ);
+        helloText.setLocalTranslation(moveX, 1, moveZ);
         rootNode.attachChild(helloText);
     }
     
@@ -193,7 +199,6 @@ public class Main extends SimpleApplication {
     private ActionListener shootListener = new ActionListener() {
       public void onAction(String name, boolean keyPressed, float tpf) {
         if (name.equals("Shoot") && !keyPressed) {
-
           CollisionResults results = new CollisionResults();
           Ray ray = new Ray(cam.getLocation(), cam.getDirection());
           shootables.collideWith(ray, results);
@@ -206,6 +211,7 @@ public class Main extends SimpleApplication {
             if(fb.CheckValidPath(hitPath)){
               rootNode.detachAllChildren();
               currentPath = hitPath;
+              future = executor.submit(getSizeHash);
               SetupUI(currentPath);
             }
             else {
@@ -219,6 +225,7 @@ public class Main extends SimpleApplication {
             if(parentPath != null){
                 currentPath = parentPath;
                 rootNode.detachAllChildren();
+                future = executor.submit(getSizeHash);
                 SetupUI(currentPath);
             }
         }
@@ -236,11 +243,66 @@ public class Main extends SimpleApplication {
             Path hitPath = fileHash.get(Paths.get(hit));
             Vector3f collisionLocation = closest.getGeometry().getLocalTranslation();
             BlowShitUp(closestName,collisionLocation);
-            currentPath = hitPath;
           }
         }
         
       }
     };
     
+    /* Use the main event loop to trigger repeating actions. */
+    @Override
+    public void simpleUpdate(float tpf) {
+      timeToUpdate = false;
+     
+
+        //If we have started a callable already, we check the status
+        if(future != null){
+            //Get the waylist when its done
+            if(future.isDone()){
+                timeToUpdate = true;
+                future = null;
+            }
+            else if(future.isCancelled()){
+                //Set future to null. Maybe we succeed next time...
+                future = null;
+            }
+        }
+      
+      //If we're positive it's time to update, we can readd all the boxes.  
+      if(timeToUpdate && (sizeHash != null)){
+        for (Map.Entry<Path,Path> file : fileHash.entrySet()) {
+          String filename = file.getKey().toString();
+          System.out.println("Trying to deal with " + filename);
+          float normalizedSize = sizeHash.get(file.getValue());
+          Geometry oldBox = (Geometry) shootables.getChild(filename);
+          Vector3f location = oldBox.getLocalTranslation();
+          shootables.detachChildNamed(filename);
+          MakeABox(filename,location.x,normalizedSize,location.z);         
+        }
+      }
+      
+
+    }
+    
+    
+    // Trying to move the size stuff to it's own thread. I'm almost sure
+    // that I'm not using this right, but it seems to work and update ~1/sec.
+    private Callable<Map<Path,Float>> getSizeHash = new Callable<Map<Path,Float>>(){
+        public Map<Path,Float> call() throws Exception {
+
+            
+            fileHash = fb.GetFileNames(currentPath);
+            sizeHash = fb.getSizeList(fileHash);
+            sizeHash = fb.normalize(sizeHash);
+
+            return sizeHash;
+        }
+    };
+    
+    
+    @Override
+    public void destroy() {
+        super.destroy();
+        executor.shutdown();
+    }
 }
