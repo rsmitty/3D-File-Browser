@@ -156,13 +156,7 @@ public class FileBrowser {
      */
     public float convertSize(float l, String type) {
         // convert bytes to kilobytes, megabytes, or gigabytes
-        float scale;
-        if ( System.getProperty("os.name").contains("Windows")) {
-            scale = 1024.0f;
-        }
-        else {
-            scale = 1000.0f;
-        }
+        float scale = 1024.0f;
         if      ("kilo".equals(type)) {return (l / scale);}
         else if ("mega".equals(type)) {return (l / scale) / scale;}
         else if ("giga".equals(type)) {return ((l / scale) / scale) / scale;}
