@@ -123,20 +123,24 @@ public class FileBrowser {
         }
         for (Map.Entry<Path,Float> entry : sizeList.entrySet()) {
             newVal = entry.getValue();
-            //box size can't be 0, so make it 1
+            //box size can't be 0 or it won't appear in scene, so make it 0.5
             if (newVal == 0.0f) {
                 newVal = 0.5f;
             }
+            //since < 1 is close to zero, make it slightly bigger by adding 1.0
             else if (newVal > 0.0f && newVal <= 1.0f) {
                 newVal += 1.0f;
             }
+            //needs to be bigger than previous 2, but smaller than maximum
             else if (newVal > 1.0f && newVal < maxVal) {
                 newVal /= maxVal;
                 newVal += 2.0f;
             }
+            //needs to be the biggest box
+            //!!! this needs work - good for large sets, bad for small sets
             else {
                 newVal /= maxVal;
-                newVal += 4.0f;
+                newVal += 3.0f;
             }
             sizeList.put(entry.getKey(), newVal);
         }
