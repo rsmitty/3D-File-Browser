@@ -87,17 +87,17 @@ public class Main extends SimpleApplication {
           zaxis -= 5;
         }
         
-        MakeABox(filename,xaxis,1,zaxis,normalizedSize);
-        MakeALabel(filename,xaxis,1,zaxis);
+        MakeABox(filename,xaxis,0,zaxis,normalizedSize);
+        MakeALabel(filename,xaxis,0,zaxis,normalizedSize);
         
         xaxis += 5;
       }
     }
     
-    public void MakeABox(String filename, int x, int y, int z, float size){
+    public void MakeABox(String filename, float x, float y, float z, float size){
         Box box = new Box(1,size,1);
         Geometry boxGeo = new Geometry("Box", box);
-        boxGeo.setLocalTranslation(new Vector3f(x,y,z));
+        boxGeo.setLocalTranslation(new Vector3f(x,size,z));
         boxGeo.setName(filename);
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         mat.setColor("Color", ColorRGBA.randomColor());
@@ -105,7 +105,7 @@ public class Main extends SimpleApplication {
         shootables.attachChild(boxGeo);
     }
     
-    public void MakeALabel(String filename, int x, int y, int z){
+    public void MakeALabel(String filename, float x, float y, float z, float size){
         float moveX = (float) x - .8f;
         float moveZ = (float) z + 1.02f;
         guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
@@ -117,7 +117,7 @@ public class Main extends SimpleApplication {
             filename = filename.substring(0, 14) + "...";
         }
         helloText.setText(filename);
-        helloText.setLocalTranslation(moveX, (float)1.5, moveZ);
+        helloText.setLocalTranslation(moveX, size, moveZ);
         rootNode.attachChild(helloText);
     }
     
