@@ -80,7 +80,7 @@ public class Main extends SimpleApplication {
       for (Map.Entry<Path,Path> file : fileHash.entrySet()) {
         String filename = file.getKey().toString();
         float normalizedSize = sizeHash.get(file.getValue());
-        System.out.printf("%s: %.2f%n", filename, normalizedSize);
+        System.out.printf("%s %s: %.2f%n", "normalized", filename, normalizedSize);
         
         if (xaxis > 20){
           xaxis = 0;
@@ -117,7 +117,7 @@ public class Main extends SimpleApplication {
             filename = filename.substring(0, 14) + "...";
         }
         helloText.setText(filename);
-        helloText.setLocalTranslation(moveX, 2, moveZ);
+        helloText.setLocalTranslation(moveX, (float)1.5, moveZ);
         rootNode.attachChild(helloText);
     }
     

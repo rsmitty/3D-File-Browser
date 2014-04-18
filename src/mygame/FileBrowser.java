@@ -41,6 +41,12 @@ public class FileBrowser {
         return directoryPath.getParent();
     }
     
+    /**
+     * Checks whether or not a path is a directory and if it is accessible
+     * 
+     * @param directoryPath Path to validate
+     * @return True if the path is a directory and if it is accessible to the filesystem
+     */
     public Boolean CheckValidPath(Path directoryPath){
         if (Files.isDirectory(directoryPath) && Files.isReadable(directoryPath)) {
             return true;
@@ -48,6 +54,15 @@ public class FileBrowser {
         return false;
     }
     
+    /**
+     * Get the size of the provided path
+     * 
+     * @param startPath Root path to gather file size for
+     * @return  A long containing the size in bytes of the specified path. 
+     *          If the specified path is a directory, recursion is used on all subfolders and files.
+     *          If the specified path is inaccessible, returns a size of 0.
+     * @throws IOException 
+     */
     public long getSize(Path startPath) throws IOException {
         final AtomicLong size = new AtomicLong(0);
         
@@ -98,20 +113,32 @@ public class FileBrowser {
      */
     public Map<Path,Float> normalize(Map<Path,Float> sizeList) {
         float maxVal = 0;
-        float temp = 0;
+        float newVal = 0;
         
-        // maxVal is scaling factor for all other file sizes
+        // find maximum size to use as scaling factor for other values
         for (Map.Entry<Path,Float> entry : sizeList.entrySet()) {
             if (entry.getValue() > maxVal) {
                 maxVal = entry.getValue();
             }
         }
         for (Map.Entry<Path,Float> entry : sizeList.entrySet()) {
-            temp = entry.getValue() / maxVal;
-            if (temp == 0f) {
-                temp = 0.1f;
+            newVal = entry.getValue();
+            //box size can't be 0, so make it 1
+            if (newVal == 0.0f) {
+                newVal = 0.5f;
             }
-            sizeList.put(entry.getKey(), temp);
+            else if (newVal > 0.0f && newVal <= 1.0f) {
+                newVal += 1.0f;
+            }
+            else if (newVal > 1.0f && newVal < maxVal) {
+                newVal /= maxVal;
+                newVal += 2.0f;
+            }
+            else {
+                newVal /= maxVal;
+                newVal += 4.0f;
+            }
+            sizeList.put(entry.getKey(), newVal);
         }
         return sizeList;
     }
