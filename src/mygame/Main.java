@@ -18,7 +18,6 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Box;
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -27,14 +26,23 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class Main extends SimpleApplication {
-
+    
+    //Holders for 3D Objects
     private Node shootables;
     private Node labels;
+    
+    //Holders for filenames and sizes
     private Map<Path,Path> fileHash;
     private Map<Path,Float> sizeHash;
+    
+    //Tracks what dir we're in
     private Path currentPath;
+    
+    //Access to FileBrowser.java utils
     private FileBrowser fb = new FileBrowser();
-    private ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(4);
+    
+    //Used to request threads for updating sizes in the background
+    private ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
     private Future future = null;
     private Boolean timeToUpdate = false;
     
@@ -100,6 +108,12 @@ public class Main extends SimpleApplication {
       future = executor.submit(getSizeHash);
     }
     
+    /**
+     * Paints a box on the screen
+     * 
+     * @param filename, x, y, z values for location.
+     *
+     */
     public void MakeABox(String filename, float x, float y, float z){
         Box box = new Box(1,y,1);
         Geometry boxGeo = new Geometry("Box", box);
@@ -111,6 +125,12 @@ public class Main extends SimpleApplication {
         shootables.attachChild(boxGeo);
     }
     
+    /**
+     * Paints a label on the screen
+     * 
+     * @param filename, x, y, z values for location.
+     *
+     */
     public void MakeALabel(String filename, float x, float y, float z){
         float moveX = (float) x - .8f;
         float moveZ = (float) z + 1.02f;
@@ -127,6 +147,12 @@ public class Main extends SimpleApplication {
         rootNode.attachChild(helloText);
     }
     
+    /**
+     * Simply adds a 2d + to the screen for help in "shooting".
+     * 
+     * @param 
+     *
+     */
     public void MakeCrosshairs(){
       guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
       BitmapText cross = new BitmapText(guiFont, false);
@@ -136,6 +162,12 @@ public class Main extends SimpleApplication {
       guiNode.attachChild(cross);
     }
     
+    /**
+     * Animations for blowing up a 3D object
+     * 
+     * @param 
+     *
+     */
     public void BlowShitUp(String boxName, Vector3f collisionLocation){
         ParticleEmitter debris = CreateDebris(collisionLocation);
         ParticleEmitter fire = CreateFire(collisionLocation);
@@ -150,6 +182,12 @@ public class Main extends SimpleApplication {
         rootNode.detachChildNamed("label-"+boxName);
     }
     
+     /**
+     * Explodes debris from whatever object we're blowing up
+     * 
+     * @param 
+     *
+     */
     public ParticleEmitter CreateDebris(Vector3f location){
         ParticleEmitter debrisEffect = new ParticleEmitter("Debris", ParticleMesh.Type.Triangle, 10);
         Material debrisMat = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
@@ -167,6 +205,12 @@ public class Main extends SimpleApplication {
         return debrisEffect;
     }
     
+    /**
+     * Explodes fire from whatever object we're blowing up
+     * 
+     * @param 
+     *
+     */
     public ParticleEmitter CreateFire(Vector3f location){
         ParticleEmitter fireEffect = new ParticleEmitter("Fire", ParticleMesh.Type.Triangle, 30);
         Material fireMat = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
@@ -187,6 +231,12 @@ public class Main extends SimpleApplication {
         return fireEffect;
     }
     
+     /**
+     * Listeners for key values. Handles picking dirs, deleting files, going to parent dir
+     * 
+     * @param 
+     *
+     */
     public void initKeys() {
       inputManager.addMapping("Shoot", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
       inputManager.addMapping("Back", new MouseButtonTrigger(MouseInput.BUTTON_RIGHT));
@@ -249,30 +299,37 @@ public class Main extends SimpleApplication {
       }
     };
     
-    /* Use the main event loop to trigger repeating actions. */
+    /**
+     * JMonkey built in loop that allows us to update the screen
+     * 
+     * @param tpf - not sure what this does
+     *
+     */
     @Override
     public void simpleUpdate(float tpf) {
+        
+      //Always default to not repainting the boxes
       timeToUpdate = false;
      
 
-        //If we have started a callable already, we check the status
-        if(future != null){
-            //Get the waylist when its done
-            if(future.isDone()){
-                timeToUpdate = true;
-                future = null;
-            }
-            else if(future.isCancelled()){
-                //Set future to null. Maybe we succeed next time...
-                future = null;
-            }
+      //Check if our background process is done, if it is, set update flag
+      if(future != null){
+          //Get the waylist when its done
+        if(future.isDone()){
+          timeToUpdate = true;
+          future = null;
         }
+        else if(future.isCancelled()){
+          //Set future to null. Maybe we succeed next time...
+          future = null;
+        }
+      }
       
-      //If we're positive it's time to update, we can readd all the boxes.  
+      //If we're positive it's time to update, we can readd all the boxes with
+      //their correct size.
       if(timeToUpdate && (sizeHash != null)){
         for (Map.Entry<Path,Path> file : fileHash.entrySet()) {
           String filename = file.getKey().toString();
-          System.out.println("Trying to deal with " + filename);
           float normalizedSize = sizeHash.get(file.getValue());
           Geometry oldBox = (Geometry) shootables.getChild(filename);
           Vector3f location = oldBox.getLocalTranslation();
@@ -285,8 +342,14 @@ public class Main extends SimpleApplication {
     }
     
     
-    // Trying to move the size stuff to it's own thread. I'm almost sure
-    // that I'm not using this right, but it seems to work and update ~1/sec.
+   /**
+    * Honestly not quite sure how to explain this function definition. But it 
+    * allows me to call the getSizeHash as a bg job. I'm also certain that
+    * I shouldn't be returning the sizeHash, since it's a global.
+    * 
+    * @param
+    *
+    */
     private Callable<Map<Path,Float>> getSizeHash = new Callable<Map<Path,Float>>(){
         public Map<Path,Float> call() throws Exception {
 
@@ -299,7 +362,13 @@ public class Main extends SimpleApplication {
         }
     };
     
-    
+    /**
+     * Overrides the destroy call to make sure that bg jobs get killed too when
+     * the program is closed.
+     * 
+     *
+     *
+     */
     @Override
     public void destroy() {
         super.destroy();
