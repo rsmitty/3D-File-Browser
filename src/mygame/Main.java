@@ -143,7 +143,7 @@ public class Main extends SimpleApplication {
             filename = filename.substring(0, 14) + "...";
         }
         helloText.setText(filename);
-        helloText.setLocalTranslation(moveX, 1, moveZ);
+        helloText.setLocalTranslation(moveX, y, moveZ);
         rootNode.attachChild(helloText);
     }
     
@@ -325,8 +325,8 @@ public class Main extends SimpleApplication {
         }
       }
       
-      //If we're positive it's time to update, we can readd all the boxes with
-      //their correct size.
+      //If we're positive it's time to update, we can readd all the boxes 
+      //and labels with their correct size.
       if(timeToUpdate && (sizeHash != null)){
         for (Map.Entry<Path,Path> file : fileHash.entrySet()) {
           String filename = file.getKey().toString();
@@ -334,7 +334,9 @@ public class Main extends SimpleApplication {
           Geometry oldBox = (Geometry) shootables.getChild(filename);
           Vector3f location = oldBox.getLocalTranslation();
           shootables.detachChildNamed(filename);
-          MakeABox(filename,location.x,normalizedSize,location.z);         
+          rootNode.detachChildNamed("label-"+filename);
+          MakeABox(filename,location.x,normalizedSize,location.z);
+          MakeALabel(filename,location.x,normalizedSize,location.z);
         }
       }
       
