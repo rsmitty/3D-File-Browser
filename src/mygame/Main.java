@@ -245,6 +245,7 @@ public class Main extends SimpleApplication {
       inputManager.addListener(shootListener, "Back");
       inputManager.addListener(shootListener, "Delete");
     }
+    
     /** Defining the "Shoot" action: Determine what was hit and how to respond. */
     private ActionListener shootListener = new ActionListener() {
       public void onAction(String name, boolean keyPressed, float tpf) {
@@ -295,23 +296,21 @@ public class Main extends SimpleApplication {
             BlowShitUp(closestName,collisionLocation);
           }
         }
-        
       }
     };
     
     /**
      * JMonkey built in loop that allows us to update the screen
      * 
-     * @param tpf - not sure what this does
+     * @param tpf   "times per frame" - governs how many times to call the loop based on framerate
      *
      */
     @Override
     public void simpleUpdate(float tpf) {
-        
+      
       //Always default to not repainting the boxes
       timeToUpdate = false;
      
-
       //Check if our background process is done, if it is, set update flag
       if(future != null){
           //Get the waylist when its done
@@ -339,8 +338,6 @@ public class Main extends SimpleApplication {
           MakeALabel(filename,location.x,normalizedSize,location.z);
         }
       }
-      
-
     }
     
     
@@ -355,7 +352,6 @@ public class Main extends SimpleApplication {
     private Callable<Map<Path,Float>> getSizeHash = new Callable<Map<Path,Float>>(){
         public Map<Path,Float> call() throws Exception {
 
-            
             fileHash = fb.GetFileNames(currentPath);
             sizeHash = fb.getSizeList(fileHash);
             sizeHash = fb.normalize(sizeHash);
@@ -367,9 +363,6 @@ public class Main extends SimpleApplication {
     /**
      * Overrides the destroy call to make sure that bg jobs get killed too when
      * the program is closed.
-     * 
-     *
-     *
      */
     @Override
     public void destroy() {
