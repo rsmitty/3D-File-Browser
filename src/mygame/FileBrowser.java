@@ -4,6 +4,7 @@
  */
 package mygame;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -162,4 +163,10 @@ public class FileBrowser {
         else if ("giga".equals(type)) {return ((l / scale) / scale) / scale;}
         else {return 0;}
     }
+    
+    public void DeleteAFile(Path pathToDelete){
+        File f = pathToDelete.toFile();
+        f.delete();
+    }
+    
 }
